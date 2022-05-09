@@ -16,8 +16,8 @@ probe @pfunc(ngx_process_events_and_timers)?, timer.profile
         if (L == 0) {
             printf("Failed to get the main Lua VM\n")
             exit()
-        }
-
+        } 
+        
         process(L)
     }
 }

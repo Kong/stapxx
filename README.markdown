@@ -91,6 +91,7 @@ Kong has put some effort into this project to make LuaJIT tools run with GC64 mo
 Currently, the following LuaJIT tracing tools are confirmed to work under GC64:
 
 * [lj-gc](#lj-gc)
+* [lj-gc-objs](#lj-gc-objs)
 * [lj-lua-bt](#lj-lua-bt)
 * [lj-lua-stacks](#lj-lua-stacks)
 * [lj-lua-string-leaks](#lj-lua-string-leaks) (new)
@@ -246,7 +247,7 @@ For now, it just prints out the total memory currently allocated in the LuaJIT G
     $ export PATH=$PWD:$PATH
 
     # assuming the nginx worker process's pid is 4771:
-    $ ./samples/lj-gc.sxx -x 4771
+    $ ./samples/lj-gc.sxx --skip-badvars -D MAXACTION=200000 -x 4771
     Start tracing 4771 (/opt/nginx/sbin/nginx)
     Total GC count: 258618 bytes
 
@@ -277,7 +278,7 @@ Here is an example.
     $ export PATH=$PWD:$PATH
 
     # assuming the nginx worker pid is 5686:
-    $ ./samples/lj-gc-objs.sxx -x 5686
+    $ ./samples/lj-gc-objs.sxx --skip-badvars -x 5686
     Start tracing 5686 (/opt/nginx/sbin/nginx)
 
     main machine code area size: 65536 bytes
