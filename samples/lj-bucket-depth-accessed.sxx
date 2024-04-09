@@ -1,6 +1,6 @@
 #!/usr/bin/env stap++
 
-@use luajit
+@use luajit_gc64
 
 global stats
 
