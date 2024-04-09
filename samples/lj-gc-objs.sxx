@@ -93,19 +93,19 @@ function process(L)
         gcobjs[$*o->gch->gct] <<< size
     }
 
-    strmask = $*g->strmask
-    strnum = $*g->strnum
-    strhash = $*g->strhash
-    $*strhash := @cast(strhash, "GCRef", "$^libluajit_path")
+    strmask = $*g->str->mask
+    strnum = $*g->str->num
+    strtab = $*g->str->tab
+    $*strtab := @cast(strtab, "GCRef", "$^libluajit_path")
 
     n = 0
     done = 0
     for (i = 0; i <= strmask; i++) {
-        p = &$*strhash[i]
+        p = &$*strtab[i]
 
         while (p) {
             o = luajit_gcref(p)
-            if (o == 0) {
+            if (o == 0 || o == 1) {
                 break;
             }
 
@@ -158,7 +158,7 @@ function process(L)
 
     } else {
         /* for LuaJIT 2.1 */
-        sizetmpbuf = $*g->tmpbuf->e->ptr64 - $*g->tmpbuf->b->ptr64
+        sizetmpbuf = $*g->tmpbuf->e - $*g->tmpbuf->b
     }
 
     if (sizetmpbuf) {
