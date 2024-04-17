@@ -95,6 +95,9 @@ Currently, the following LuaJIT tracing tools are confirmed to work under GC64:
 * [lj-lua-stacks](#lj-lua-stacks)
 * [lj-lua-string-leaks](#lj-lua-string-leaks) (new)
 * [lj-lua-table-leaks](#lj-lua-table-leaks) (new)
+* [lj-str-tab](#lj-str-tab)
+* [lj-find-str](#lj-find-str)
+* [lj-gc-objs](#lj-gc-objs)
 
 Non-GC64 mode support for LuaJIT has been removed from this fork. If you require running these tools
 under non-GC64 mode, please refer to the original [openresty/stapxx](https://github.com/openresty/stapxx)
