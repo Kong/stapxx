@@ -79,6 +79,7 @@ function process(L)
     }
 
     printf("GC total size: %d bytes\n", $*g->gc->total)
+    printf("LuaJIT GC estimate size: %d bytes\n", $*g->gc->estimate)
 
     $*o := @cast(o, "GCobj", "$^libluajit_path")
     for (p = &$*g->gc->root; p; p = &$*o->gch->nextgc) {
@@ -159,7 +160,7 @@ function process(L)
 
     } else {
         /* for LuaJIT 2.1 */
-        sizetmpbuf = $*g->tmpbuf->e->ptr64 - $*g->tmpbuf->b->ptr64
+        sizetmpbuf = $*g->tmpbuf->e - $*g->tmpbuf->b
     }
 
     if (sizetmpbuf) {

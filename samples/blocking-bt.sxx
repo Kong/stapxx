@@ -1,0 +1,119 @@
+#!/usr/bin/env stap++
+
+@use nginx.lua
+@use luajit_gc64
+
+global start_time, bts
+global flag = 0
+global N_TOP_FRAMES = 10
+global BLOCKING_TIME_THRESHOLD = 50
+global NOTICEABLE_BT_SAMPLES = 0
+global MODE = "timing"
+// global MODE = "sampling"
+
+function process()
+{
+    if (@defined(@var("globalL", "$^exec_path"))) {
+        mL = @var("globalL", "$^exec_path")
+
+    } else {
+        mL = ngx_lua_get_main_lua_vm()
+    }
+
+    if (mL == 0) {
+        return ""
+    }
+
+    g = luajit_G(mL)
+    if (g == 0) {
+        return ""
+    }
+
+    L = luajit_cur_thread(g)
+    if (L == 0) {
+        return ""
+    }
+
+    bt = luajit_backtrace(L, g, 0)
+    if (bt != "") {
+        f = probefunc()
+        if (f != "") {
+            bt = f . "\n" . bt
+        }
+        return bt
+    }
+
+    return ""
+}
+
+probe timer.profile
+{
+    if (tid() == target() && flag) {
+        bts[process()] <<< 1
+    }
+}
+
+%( "$^arg_time :default()" != ""  %?
+probe timer.s($^arg_time)
+{
+    warn("Time's up. Quitting now...\n")
+    exit()
+}
+%)
+
+probe begin
+{
+    warn(sprintf("Start tracing %d ($^exec_path)\n", target()))
+    %( "$^arg_time" != ""  %?
+    warn(sprintf("Please wait for $^arg_time seconds...\n"))
+    %:
+    warn("Hit Ctrl-C to end.\n")
+    %)
+}
+
+probe process("$^libluajit_path").function("lua_resume")
+{
+    if (tid() == target()) {
+        flag = 1
+        start_time = gettimeofday_ms()
+    }
+}
+
+probe process("$^libluajit_path").function("lua_resume").return
+{
+    if (tid() == target()) {
+        flag = 0
+        blocking_time = gettimeofday_ms() - start_time
+
+        if (blocking_time >= BLOCKING_TIME_THRESHOLD) {
+            if (MODE == "timing") {
+                printf("----->>> Blocks %d ms <<<-----\n", blocking_time)
+            }
+
+            n_top_frames = N_TOP_FRAMES
+            if (MODE == "sampling") {
+                n_top_frames = 999999
+            }
+
+            noticeable_bt_samples = NOTICEABLE_BT_SAMPLES
+            if (MODE == "sampling") {
+                noticeable_bt_samples = 1
+            }
+
+            foreach (bt in bts- limit n_top_frames) {
+                cnt = @count(bts[bt])
+                if (cnt <= noticeable_bt_samples) {
+                    break
+                }
+
+                printf("%s\t%d\n", bt, cnt)
+            }
+            
+            if (MODE == "timing") {
+                printf("\n");
+            }
+        }
+
+        delete bts
+    }
+}

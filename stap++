@@ -126,7 +126,7 @@ if (defined $exec_path) {
     while (<$in>) {
         if (m{\s+(\/\S+\.so(?:\.\d+)*)}) {
             my $path = $1;
-            #warn "Found DSO $path.\n";
+            # warn "Found DSO $path.\n";
             $DSOs{$path} = 1;
         }
     }
@@ -347,12 +347,12 @@ sub find_dso_path {
     my $found_path;
     for my $path (sort keys %DSOs) {
         #warn "checking $path against $pat";
-        if ($path =~ m{\blib\Q$name\E[-.\d]*\.so(?:\.\d+)*$}) {
+        if ($path =~ m{\blib\Q$name\E[-.\d]*\.so(?:\.\d+)*(?:\.ROLLING)?$}) {
             $LibPaths{$pat} = $path;
             $found_path = $path;
             warn "Found exact match for $pat: $path\n";
             last;
-	}
+	    }
 
         if ($path =~ m{\b(?:lib)?\Q$name\E[^/\s]*?\.so(?:\.\d+)*$}) {
             if ($found_path) {
@@ -503,12 +503,14 @@ sub process_dso {
         or die "Cannot open $maps_file for reading: $!\n";
 
     while (<$in>) {
-        if (m{\S+\.so(?:\.\d+)*$}) {
+        if (m{\S+\.so(?:\.\d+)*(?:\.ROLLING)?$}) {
             my $path = $&;
             $DSOs{$path} = 1;
             #warn "seeing $path";
         }
     }
+
+    print "DSOs: ", join(", ", sort keys %DSOs), "\n";
 
     for my $path (sort keys %DSOs) {
         push @stap_opts, "-d", $path;
