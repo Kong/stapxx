@@ -559,13 +559,14 @@ function luajit_debug_dumpstack(L, T, depth, base, simple)
         depth = dir = -1
     }
     bt = ""
+    frame = base - @sizeof_TValue
+    bot = $*L->stack->ptr64 + @sizeof_TValue //@LJ_FR2
     while (level != depth) {
         /* lj_debug_frame(L, level, &size) {{{ */
-        bot = $*L->stack->ptr64 + @sizeof_TValue //@LJ_FR2
         found_frame = 0
         tmp_level = level
         /* Traverse frames backwards. */
-        for (nextframe = frame = base - @sizeof_TValue; frame > bot; ) {
+        for (; frame > bot; ) {
             if (@frame_gc(frame) == L) {
                 tmp_level++
             }
